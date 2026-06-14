@@ -1,20 +1,24 @@
-Debian oldstable:arm64:
-  extends: Debian stable:arm64
+Debian stable:arm64:
+  extends: .srb2ci
 
   stage: build
 
   when: manual
 
-  image: git.do.srb2.org:5050/stjr/srb2ci/srb2ci:oldstable
-
-  allow_failure: true
-
   artifacts:
     paths:
       - "build.cmake/bin/"
       - "build.cmake/src/config.h"
-    expose_as: "Debian old arm64"
-    name: "$CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-old-aarch64"
+    expose_as: "Debian arm64"
+    name: "$CI_PROJECT_PATH_SLUG-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA-aarch64"
+
+  variables:
+    CC: aarch64-linux-gnu-gcc
+    CXX: aarch64-linux-gnu-g++
+    OBJCOPY: aarch64-linux-gnu-objcopy
+    OBJDUMP: aarch64-linux-gnu-objdump
+    LD: aarch64-linux-gnu-ld
+    PKG_CONFIG_PATH: /usr/lib/aarch64-linux-gnu/pkgconfig
 
   script:
     - - |
@@ -28,7 +32,7 @@ Debian oldstable:arm64:
     - - |
           # apt_development
           echo -e "\e[0Ksection_start:`date +%s`:apt_development[collapsed=true]\r\e[0KInstalling development packages"
-      - apt-get install libsdl2-dev:arm64 libpng-dev:arm64 libcurl4-openssl-dev:arm64
+      - apt-get install libsdl2-dev:arm64 libpng-dev:arm64 libcurl4-openssl-dev:arm64 libyuv-dev:arm64
       - |
           # apt_development
           echo -e "\e[0Ksection_end:`date +%s`:apt_development\r\e[0K"
@@ -38,13 +42,10 @@ Debian oldstable:arm64:
           echo -e "\e[0Ksection_start:`date +%s`:cmake[collapsed=false]\r\e[0KBuilding Makefiles"
       - |
           cmake \
+            --preset ninja-debug \
             -B build.cmake \
             -G "Unix Makefiles" \
             -DCMAKE_COLOR_DIAGNOSTICS=OFF \
-            -DCMAKE_C_FLAGS_RELWITHDEBINFO="-O3 -g -DNDEBUG" \
-            -DCMAKE_CXX_FLAGS_RELWITHDEBINFO="-O3 -g -DNDEBUG"
-            -DSRB2_CONFIG_DEV_BUILD=ON \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DSRB2_CONFIG_ENABLE_WEBM_MOVIES=OFF \
             -DSRB2_CONFIG_FORCE_NO_MS_BITFIELDS=ON
       - |
